@@ -392,6 +392,17 @@ def _run_checkpoint_once(tensor_dict,
   return (global_step, all_evaluator_metrics)
 
 
+def smaller_loss(best_eval_result, current_eval_result, metric_key='loss'):
+  if not best_eval_result or metric_key not in best_eval_result:
+    raise ValueError(
+      'best_eval_result cannot be empty or no loss is available.')
+
+  if not current_eval_result or metric_key not in current_eval_result:
+    raise ValueError(
+      'current_eval_result cannot be empty or no loss is available.')
+
+  return best_eval_result[metric_key] > current_eval_result[metric_key]
+
 # TODO(rathodv): Add tests.
 def repeated_checkpoint_run(tensor_dict,
                             summary_dir,
@@ -409,7 +420,9 @@ def repeated_checkpoint_run(tensor_dict,
                             save_graph_dir='',
                             losses_dict=None,
                             eval_export_path=None,
-                            process_metrics_fn=None):
+                            process_metrics_fn=None,
+                            compare_fn=smaller_loss,
+                            export_checkpoint_path=None):
   """Periodically evaluates desired tensors using checkpoint_dirs or restore_fn.
 
   This function repeatedly loads a checkpoint and evaluates a desired
@@ -478,8 +491,17 @@ def repeated_checkpoint_run(tensor_dict,
   if not checkpoint_dirs:
     raise ValueError('`checkpoint_dirs` must have at least one entry.')
 
+  if not export_checkpoint_path:
+    raise ValueError('`export_checkpoint_path` must have at least one entry.')
+
   last_evaluated_model_path = None
   number_of_evaluations = 0
+  best_eval_result = None
+
+  # Create the export folder if it does not exists.
+  if not tf.gfile.Exists(export_checkpoint_path):
+    tf.gfile.MakeDirs(export_checkpoint_path)
+
   while True:
     start = time.time()
     tf.logging.info('Starting evaluation at ' + time.strftime(
@@ -508,6 +530,26 @@ def repeated_checkpoint_run(tensor_dict,
           eval_export_path=eval_export_path,
           process_metrics_fn=process_metrics_fn)
       write_metrics(metrics, global_step, summary_dir)
+
+      # If it is the first checkpoint, we will always copy.
+      if best_eval_result is None or \
+          compare_fn(best_eval_result, metrics):
+
+        tf.logging.info('Updating the best checkpoint files.')
+
+        # Remove the previous best checkpoint.
+        for filename in tf.gfile.Glob(os.path.join(export_checkpoint_path, '*')):
+          tf.gfile.Remove(filename)
+
+        # Copy over new best checkpoint
+        for filename in tf.gfile.Glob(model_path + '*'):
+          tf.gfile.Copy(filename, os.path.join(
+            export_checkpoint_path, os.path.basename(filename)))
+
+        best_eval_result = metrics
+      else:
+        tf.logging.info('Metrics did not improve. Not copying over checkpoints.')
+
       if (max_evaluation_global_step and
           global_step >= max_evaluation_global_step):
         tf.logging.info('Finished evaluation!')

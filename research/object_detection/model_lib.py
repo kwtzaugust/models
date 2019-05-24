@@ -56,6 +56,51 @@ MODEL_BUILD_UTIL_MAP = {
     'detection_model_fn_base': model_builder.build,
 }
 
+class BestCheckpointExporter(tf.estimator.BestExporter):
+  def export(self, 
+             estimator, 
+             export_path, 
+             checkpoint_path, 
+             eval_result, 
+             is_the_final_export):
+
+    if not tf.gfile.Exists(export_path):
+      tf.gfile.MakeDirs(export_path)
+
+    # Check if the results are better
+    if self._best_eval_result is None or \
+        self._compare_fn(self._best_eval_result, eval_result):
+
+      tf.logging.info('Model has improved. Saving checkpoint.')
+
+      # Copy the checkpoints files *.meta *.index, *.data* each time there is a better result.
+      for name in tf.gfile.Glob(checkpoint_path + '.*'):
+        tf.gfile.Copy(name, os.path.join(export_path, os.path.basename(name)))
+
+        # Update the best evaluation here.
+        self._best_eval_result = eval_result
+
+        # Remove poorer performing checkpoint.
+        self._garbage_collect_exports(export_path)
+    else:
+      tf.logging.info('Keeping the current best model.')
+
+    def _garbage_collect_exports(self, export_path):
+      # Get the number of checkpoints using glob
+      ckpt_indices = tf.gfile.Glob(os.path.join(export_path, '*.index'))
+      ckpt_indices.sort()
+
+      # If there's only one checkpoint saved so far, skip.
+      if len(ckpt_indices) <= 1:
+        return
+
+      # Remove the previous model file.
+      oldest_ckpt_prefix = os.path.splitext(ckpt_indices[0])[0]
+      for filename in tf.gfile.ListDirectory(export_path):
+        filename = os.path.join(export_path, filename)
+        if filename.startswith(oldest_ckpt_prefix):
+          tf.logging.info('Removing {}.'.format(filename))
+          tf.gfile.Remove(filename)
 
 def _prepare_groundtruth_for_eval(detection_model, class_agnostic,
                                   max_number_of_boxes):
@@ -730,14 +775,24 @@ def create_train_and_eval_specs(train_input_fn,
       exporter_name = final_exporter_name
     else:
       exporter_name = '{}_{}'.format(final_exporter_name, eval_spec_name)
+
     exporter = tf.estimator.FinalExporter(
         name=exporter_name, serving_input_receiver_fn=predict_input_fn)
+
+    # TODO: Currently this metric_key is hard coded. 
+    #   This should be configuration from command line.
+    compare_fn = functools.partial(eval_util.smaller_loss, 
+                                   metric_key='DetectionBoxes_Precision/mAP@.50IOU')
+    best_ckpt_exporter = BestCheckpointExporter(compare_fn=compare_fn)
+
     eval_specs.append(
         tf.estimator.EvalSpec(
             name=eval_spec_name,
             input_fn=eval_input_fn,
             steps=None,
-            exporters=exporter))
+            start_delay_secs=10,
+            throttle_secs=10,
+            exporters=[exporter, best_ckpt_exporter]))
 
   if eval_on_train_data:
     eval_specs.append(
