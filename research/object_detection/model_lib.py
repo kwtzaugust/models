@@ -77,11 +77,11 @@ class BestCheckpointExporter(tf.estimator.BestExporter):
       for name in tf.gfile.Glob(checkpoint_path + '.*'):
         tf.gfile.Copy(name, os.path.join(export_path, os.path.basename(name)))
 
-        # Update the best evaluation here.
-        self._best_eval_result = eval_result
+      # Update the best evaluation here.
+      self._best_eval_result = eval_result
 
-        # Remove poorer performing checkpoint.
-        self._garbage_collect_exports(export_path)
+      # Remove poorer performing checkpoint.
+      self._garbage_collect_exports(export_path)
     else:
       tf.logging.info('Keeping the current best model.')
 
@@ -92,6 +92,7 @@ class BestCheckpointExporter(tf.estimator.BestExporter):
 
       # If there's only one checkpoint saved so far, skip.
       if len(ckpt_indices) <= 1:
+        tf.logging.info('Only one checkpoint. Skipping.')
         return
 
       # Remove the previous model file.
@@ -101,6 +102,8 @@ class BestCheckpointExporter(tf.estimator.BestExporter):
         if filename.startswith(oldest_ckpt_prefix):
           tf.logging.info('Removing {}.'.format(filename))
           tf.gfile.Remove(filename)
+        else:
+          tf.logging.info('Not removing {}'.format(filename))
 
 def _prepare_groundtruth_for_eval(detection_model, class_agnostic,
                                   max_number_of_boxes):
