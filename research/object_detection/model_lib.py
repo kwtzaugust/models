@@ -85,25 +85,25 @@ class BestCheckpointExporter(tf.estimator.BestExporter):
     else:
       tf.logging.info('Keeping the current best model.')
 
-    def _garbage_collect_exports(self, export_path):
-      # Get the number of checkpoints using glob
-      ckpt_indices = tf.gfile.Glob(os.path.join(export_path, '*.index'))
-      ckpt_indices.sort()
+  def _garbage_collect_exports(self, export_path):
+    # Get the number of checkpoints using glob
+    ckpt_indices = tf.gfile.Glob(os.path.join(export_path, '*.index'))
+    ckpt_indices.sort()
 
-      # If there's only one checkpoint saved so far, skip.
-      if len(ckpt_indices) <= 1:
-        tf.logging.info('Only one checkpoint. Skipping.')
-        return
+    # If there's only one checkpoint saved so far, skip.
+    if len(ckpt_indices) <= 1:
+      tf.logging.info('Only one checkpoint. Skipping.')
+      return
 
-      # Remove the previous model file.
-      oldest_ckpt_prefix = os.path.splitext(ckpt_indices[0])[0]
-      for filename in tf.gfile.ListDirectory(export_path):
-        filename = os.path.join(export_path, filename)
-        if filename.startswith(oldest_ckpt_prefix):
-          tf.logging.info('Removing {}.'.format(filename))
-          tf.gfile.Remove(filename)
-        else:
-          tf.logging.info('Not removing {}'.format(filename))
+    # Remove the previous model file.
+    oldest_ckpt_prefix = os.path.splitext(ckpt_indices[0])[0]
+    for filename in tf.gfile.ListDirectory(export_path):
+      filename = os.path.join(export_path, filename)
+      if filename.startswith(oldest_ckpt_prefix):
+        tf.logging.info('Removing {}.'.format(filename))
+        tf.gfile.Remove(filename)
+      else:
+        tf.logging.info('Not removing {}'.format(filename))
 
 def _prepare_groundtruth_for_eval(detection_model, class_agnostic,
                                   max_number_of_boxes):
