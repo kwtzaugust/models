@@ -790,8 +790,6 @@ def create_train_and_eval_specs(train_input_fn,
             name=eval_spec_name,
             input_fn=eval_input_fn,
             steps=None,
-            start_delay_secs=10,
-            throttle_secs=10,
             exporters=[exporter, best_ckpt_exporter]))
 
   if eval_on_train_data:
