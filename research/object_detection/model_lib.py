@@ -781,7 +781,7 @@ def create_train_and_eval_specs(train_input_fn,
 
     # TODO: Currently this metric_key is hard coded. 
     #   This should be configuration from command line.
-    compare_fn = functools.partial(eval_util.smaller_loss, 
+    compare_fn = functools.partial(eval_util.greater_metric, 
                                    metric_key='DetectionBoxes_Precision/mAP@.50IOU')
     best_ckpt_exporter = BestCheckpointExporter(compare_fn=compare_fn)
 

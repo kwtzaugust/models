@@ -403,6 +403,17 @@ def smaller_loss(best_eval_result, current_eval_result, metric_key='loss'):
 
   return best_eval_result[metric_key] > current_eval_result[metric_key]
 
+def greater_metric(best_eval_result, current_eval_result, metric_key='loss'):
+  if not best_eval_result or metric_key not in best_eval_result:
+    raise ValueError(
+      'best_eval_result cannot be empty or no loss is available.')
+
+  if not current_eval_result or metric_key not in current_eval_result:
+    raise ValueError(
+      'current_eval_result cannot be empty or no loss is available.')
+
+  return best_eval_result[metric_key] < current_eval_result[metric_key]
+
 # TODO(rathodv): Add tests.
 def repeated_checkpoint_run(tensor_dict,
                             summary_dir,

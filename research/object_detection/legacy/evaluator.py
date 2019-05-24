@@ -294,7 +294,7 @@ def evaluate(create_input_dict_fn, create_model_fn, eval_config, categories,
       losses_dict=losses_dict,
       eval_export_path=eval_config.export_path,
       # TODO: Hardcoded for now. Need to expose this in config.
-      compare_fn=functools.partial(eval_util.smaller_loss, 
+      compare_fn=functools.partial(eval_util.greater_metric, 
                                    metric_key='PascalBoxes_Precision/mAP@0.5IOU'),
       export_checkpoint_path=os.path.join(eval_dir, 'best_export'))
 
