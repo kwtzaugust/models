@@ -412,6 +412,9 @@ def greater_metric(best_eval_result, current_eval_result, metric_key='loss'):
     raise ValueError(
       'current_eval_result cannot be empty or no loss is available.')
 
+  tf.logging.info('Metric key: {}'.format(metric_key))
+  tf.logging.info('Current result: {}, Best result: {}'.format(
+    best_eval_result[metric_key], current_eval_result[metric_key]))
   return best_eval_result[metric_key] < current_eval_result[metric_key]
 
 # TODO(rathodv): Add tests.
