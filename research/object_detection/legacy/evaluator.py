@@ -293,9 +293,8 @@ def evaluate(create_input_dict_fn, create_model_fn, eval_config, categories,
       save_graph_dir=(eval_dir if eval_config.save_graph else ''),
       losses_dict=losses_dict,
       eval_export_path=eval_config.export_path,
-
       # TODO: Hardcoded for now. Need to expose this in config.
-      compare_fn=functools.partial(eval_util.smaller_loss)
+      compare_fn=functools.partial(eval_util.smaller_loss),
       export_checkpoint_path=os.path.join(eval_dir, 'best_export'))
 
   return metrics
