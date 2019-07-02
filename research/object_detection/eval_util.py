@@ -546,23 +546,26 @@ def repeated_checkpoint_run(tensor_dict,
       write_metrics(metrics, global_step, summary_dir)
 
       # If it is the first checkpoint, we will always copy.
-      if best_eval_result is None or \
-          compare_fn(best_eval_result, metrics):
+      try:
+        if best_eval_result is None or \
+            compare_fn(best_eval_result, metrics):
 
-        tf.logging.info('Updating the best checkpoint files.')
+          tf.logging.info('Updating the best checkpoint files.')
 
-        # Remove the previous best checkpoint.
-        for filename in tf.gfile.Glob(os.path.join(export_checkpoint_path, '*')):
-          tf.gfile.Remove(filename)
+          # Remove the previous best checkpoint.
+          for filename in tf.gfile.Glob(os.path.join(export_checkpoint_path, '*')):
+            tf.gfile.Remove(filename)
 
-        # Copy over new best checkpoint
-        for filename in tf.gfile.Glob(model_path + '*'):
-          tf.gfile.Copy(filename, os.path.join(
-            export_checkpoint_path, os.path.basename(filename)))
+          # Copy over new best checkpoint
+          for filename in tf.gfile.Glob(model_path + '*'):
+            tf.gfile.Copy(filename, os.path.join(
+              export_checkpoint_path, os.path.basename(filename)))
 
-        best_eval_result = metrics
-      else:
-        tf.logging.info('Metrics did not improve. Not copying over checkpoints.')
+          best_eval_result = metrics
+        else:
+          tf.logging.info('Metrics did not improve. Not copying over checkpoints.')
+      except:
+        tf.logging.debug('Unable to compare metrics')
 
       if (max_evaluation_global_step and
           global_step >= max_evaluation_global_step):
