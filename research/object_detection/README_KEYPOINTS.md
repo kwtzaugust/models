@@ -21,7 +21,7 @@ An example tfr creator script `txt_to_tfr_retface_v2.py` has been provided that 
 ## How to create TFR with keypoint data
 Crucially, tf.Example should be created this way:
 ```python
-# use standard_fields.py for keypoints
+# refer to standard key names from standard_fields.py for keypoints
 example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
         'image/width': dataset_util.int64_feature(width),
@@ -51,10 +51,11 @@ Suppose an image has 2 face bounding box and 2 sets of 5 facial keypoints. The v
 * `xmin`: `[xmin1, xmin2]` where values are float, normalised by image width (or height, for `ymin`, `ymax`)
 * Similarly for `xmax`, `ymin`, `ymax`
 * `kx`: `[kx11, kx12, kx13, kx14, kx15, kx21, kx22, kx23, kx24, kx25]` where values are float (if keypoint is visible / available), normalised by image width (or height for `ky`) or np.NaN (if keypoint is non-visible / unavailable, as required by core/model.py line 290).
+* Similarly for `ky`
 
 See `txt_to_tfr_retface_v2.py` for an example workflow.
 
 # References
-RetinaFace: https://github.com/deepinsight/insightface/tree/master/RetinaFace
-WIDERFACE: http://shuoyang1213.me/WIDERFACE/WiderFace_Results.html 
+* RetinaFace: https://github.com/deepinsight/insightface/tree/master/RetinaFace
+* WIDERFACE: http://shuoyang1213.me/WIDERFACE/WiderFace_Results.html 
 
