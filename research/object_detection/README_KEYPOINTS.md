@@ -11,7 +11,7 @@ This repo has been modified in 2 key areas to enable keypoint model training:
 The changes have been tested to work with feature extractors but is expected to work for other feature extractors as well:  
 * ssd_resnet50_v1_fpn  
 * ssd_inception_v2 
-* # to be updated
+* ...to be updated
 
 Example pipelines for the above tested feature extractors have been provided in folder keypoint_examples.
 Comments within the `pipeline*.config` files highlight the necessary configurations in the pipeline to enable keypoint training, such as the params `num_keypoints` and `box_code_size`.
