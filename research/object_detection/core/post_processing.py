@@ -499,10 +499,11 @@ def batch_multiclass_non_max_suppression(boxes,
     if num_additional_fields > 0:
       # Sort the keys to ensure arranging elements in same order as
       # in _single_image_nms_fn.
-      batch_nmsed_keys = ordered_additional_fields.keys()
-      for i in range(len(batch_nmsed_keys)):
-        batch_nmsed_additional_fields[
-            batch_nmsed_keys[i]] = batch_nmsed_values[i]
+      batch_nmsed_keys = ordered_additional_fields.keys() # OrderedDict([('keypoints', <tf.Tensor 'Postprocessor/Reshape_2:0' shape=(?, ?, 5, 2) dtype=float32>)])
+
+      # KWT: ESSENTIAL EDIT FOR EVAL / EXPORT
+      for i, key in enumerate(batch_nmsed_keys):
+        batch_nmsed_additional_fields[key] = batch_nmsed_values[i]
 
     batch_num_detections = batch_outputs[-1]
 
